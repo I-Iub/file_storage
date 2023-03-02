@@ -20,7 +20,7 @@ class File(Base):
     id = Column(UUID, primary_key=True, index=True)
     name = Column(String(length=256), nullable=False)
     created_at = Column(DateTime, nullable=False)
-    path = Column(String(length=256), nullable=False, index=True)
+    path = Column(String(length=256), nullable=False, unique=True, index=True)
     size = Column(Integer, nullable=False)
     user_id = Column(UUID,
                      ForeignKey('users.id', ondelete='CASCADE'),

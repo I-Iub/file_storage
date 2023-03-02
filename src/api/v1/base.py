@@ -1,12 +1,13 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Form, UploadFile, status
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.v1.schemas import FileInfo, Ping, UserInDB
 from src.db.database import get_session
-from src.services.files import upload_file
+from src.services.files import get_file_path, iter_file, upload_file
 from src.services.auth import get_current_user
 
 router = APIRouter()
@@ -53,11 +54,32 @@ async def upload_files(file: UploadFile,
     return file_info
 
 
+# @router.get('/files/download',
+#             status_code=status.HTTP_200_OK,
+#             response_class=FileResponse,
+#             summary='Скачать загруженный файл.',
+#             description='Скачивание ранее загруженного файла. Возможность '
+#                         'скачивания есть как по переданному пути до файла, '
+#                         'так и по идентификатору.')
+# async def download_files(
+#         path: str,
+#         current_user: UserInDB = Depends(get_current_user),
+#         session: AsyncSession = Depends(get_session)
+# ) -> Any:
+#     file_path = await get_file_path(path, session)
+#     return file_path
+
+
 @router.get('/files/download',
-            status_code=status.HTTP_201_CREATED,
+            status_code=status.HTTP_200_OK,
             summary='Скачать загруженный файл.',
             description='Скачивание ранее загруженного файла. Возможность '
                         'скачивания есть как по переданному пути до файла, '
                         'так и по идентификатору.')
-async def download_files(current_user: UserInDB = Depends(get_current_user)):
-    pass
+async def download_files(
+        path: str,
+        current_user: UserInDB = Depends(get_current_user),
+        session: AsyncSession = Depends(get_session)
+) -> Any:
+    file_path = await get_file_path(path, current_user.uuid, session)
+    return StreamingResponse(iter_file(file_path))

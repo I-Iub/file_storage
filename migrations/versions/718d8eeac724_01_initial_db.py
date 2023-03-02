@@ -1,8 +1,8 @@
 """01_initial-db
 
-Revision ID: 793cc859ce74
+Revision ID: 718d8eeac724
 Revises: 
-Create Date: 2023-03-01 21:57:32.373188
+Create Date: 2023-03-02 17:25:57.963838
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '793cc859ce74'
+revision = '718d8eeac724'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,7 +37,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_files_id'), 'files', ['id'], unique=False)
-    op.create_index(op.f('ix_files_path'), 'files', ['path'], unique=False)
+    op.create_index(op.f('ix_files_path'), 'files', ['path'], unique=True)
     # ### end Alembic commands ###
 
 

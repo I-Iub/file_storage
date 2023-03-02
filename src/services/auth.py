@@ -7,10 +7,10 @@ from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import select
 
-from src.api.v1.schemas import TokenData, UserAuth
+from src.api.v1.schemas import TokenData, UserInDB
 from src.core.config import ALGORITHM, SECRET_KEY
 from src.db.database import get_session
-from src.models.users import User
+from src.models.base import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
@@ -24,19 +24,21 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-async def get_user(session: AsyncSession, username: str) -> UserAuth | None:
+async def get_user(session: AsyncSession, username: str) -> UserInDB | None:
     result = await session.execute(
         select(User).where(User.username == username)
     )
     user = result.scalar()
     if user is None:
         return
-    return UserAuth(username=user.username, password=user.password)
+    return UserInDB(username=user.username,
+                    uuid=str(user.id),
+                    password=user.password)
 
 
 async def authenticate_user(
         session: AsyncSession, username: str, password: str
-) -> UserAuth | bool:
+) -> UserInDB | bool:
     user = await get_user(session, username)
     if not user:
         return False
@@ -61,7 +63,7 @@ def create_access_token(
 async def get_current_user(
         token: str = Depends(oauth2_scheme),
         session: AsyncSession = Depends(get_session)
-) -> UserAuth:
+) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',

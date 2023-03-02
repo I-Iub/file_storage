@@ -1,3 +1,6 @@
+import datetime
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
@@ -14,6 +17,10 @@ class UserAuth(User):
     password: str
 
 
+class UserInDB(UserAuth):
+    uuid: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -23,14 +30,9 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-class FilePath(BaseModel):
-    path: str
-
-
 class FileInfo(BaseModel):
-    id: str
+    id: UUID
     name: str
-    created_ad: str
+    created_at: datetime.datetime
     path: str
     size: int
-    is_downloadable: bool

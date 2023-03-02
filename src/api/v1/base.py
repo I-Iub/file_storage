@@ -1,9 +1,12 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Form, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.schemas import FileInfo, Ping, User
+from src.api.v1.schemas import FileInfo, Ping, UserInDB
+from src.db.database import get_session
+from src.services.files import upload_file
 from src.services.auth import get_current_user
 
 router = APIRouter()
@@ -16,7 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
             summary='Статус активности связанных сервисов.',
             description='Получить информацию о времени доступа ко всем '
                         'связанным сервисам')
-async def ping(current_user: User = Depends(get_current_user)) -> Any:
+async def ping(current_user: UserInDB = Depends(get_current_user)) -> Any:
     return Ping(db=1, cache=2)
 
 
@@ -24,7 +27,7 @@ async def ping(current_user: User = Depends(get_current_user)) -> Any:
             status_code=status.HTTP_200_OK,
             summary='Информация о загруженных файлах.',
             description='Вернуть информацию о ранее загруженных файлах.')
-async def get_files(current_user: User = Depends(get_current_user)):
+async def get_files(current_user: UserInDB = Depends(get_current_user)):
     pass
 
 
@@ -39,10 +42,15 @@ async def get_files(current_user: User = Depends(get_current_user)):
                          'созданы автоматически. Так же, есть возможность '
                          'указать только путь до директории. В этом случае '
                          'имя создаваемого файла будет создано в соответствии '
-                         'с передаваемым именем файла.')
-async def upload_files(path: str,
-                       current_user: User = Depends(get_current_user)) -> Any:
-    return {}
+                         'с передаваемым именем файла. Если путь заканчивается'
+                         'на слэш ("/"), то он считается путём до директории, '
+                         'если не заканчивается на слэш, то путём до файла.')
+async def upload_files(file: UploadFile,
+                       path: str = Form(),
+                       current_user: UserInDB = Depends(get_current_user),
+                       session: AsyncSession = Depends(get_session)) -> Any:
+    file_info = await upload_file(file, path, current_user.uuid, session)
+    return file_info
 
 
 @router.get('/files/download',
@@ -51,5 +59,5 @@ async def upload_files(path: str,
             description='Скачивание ранее загруженного файла. Возможность '
                         'скачивания есть как по переданному пути до файла, '
                         'так и по идентификатору.')
-async def download_files(current_user: User = Depends(get_current_user)):
+async def download_files(current_user: UserInDB = Depends(get_current_user)):
     pass

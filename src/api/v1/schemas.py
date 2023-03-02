@@ -1,12 +1,12 @@
 import datetime
+import typing
 from uuid import UUID
 
 from pydantic import BaseModel
 
 
 class Ping(BaseModel):
-    db: int
-    cache: int
+    db: float | typing.Literal['N/A']
 
 
 class User(BaseModel):
@@ -36,3 +36,8 @@ class FileInfo(BaseModel):
     created_at: datetime.datetime
     path: str
     size: int
+
+
+class UserFiles(BaseModel):
+    account_id: str
+    files: list[FileInfo]

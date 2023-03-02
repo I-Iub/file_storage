@@ -1,13 +1,14 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Form, UploadFile, status
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.schemas import FileInfo, Ping, UserInDB
+from src.api.v1.schemas import FileInfo, Ping, UserFiles, UserInDB
 from src.db.database import get_session
-from src.services.files import get_file_path, iter_file, upload_file
+from src.services.files import (get_file_path, iter_file, ping_connections,
+                                retrieve_files, upload)
 from src.services.auth import get_current_user
 
 router = APIRouter()
@@ -20,16 +21,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
             summary='Статус активности связанных сервисов.',
             description='Получить информацию о времени доступа ко всем '
                         'связанным сервисам')
-async def ping(current_user: UserInDB = Depends(get_current_user)) -> Any:
-    return Ping(db=1, cache=2)
+async def ping() -> Any:
+    ping_summary = await ping_connections()
+    return ping_summary
 
 
 @router.get('/files',
+            response_model=UserFiles,
             status_code=status.HTTP_200_OK,
             summary='Информация о загруженных файлах.',
             description='Вернуть информацию о ранее загруженных файлах.')
-async def get_files(current_user: UserInDB = Depends(get_current_user)):
-    pass
+async def get_files(current_user: UserInDB = Depends(get_current_user),
+                    session: AsyncSession = Depends(get_session)) -> Any:
+    return await retrieve_files(current_user.uuid, session)
 
 
 @router.post('/files/upload',
@@ -50,24 +54,8 @@ async def upload_files(file: UploadFile,
                        path: str = Form(),
                        current_user: UserInDB = Depends(get_current_user),
                        session: AsyncSession = Depends(get_session)) -> Any:
-    file_info = await upload_file(file, path, current_user.uuid, session)
+    file_info = await upload(file, path, current_user.uuid, session)
     return file_info
-
-
-# @router.get('/files/download',
-#             status_code=status.HTTP_200_OK,
-#             response_class=FileResponse,
-#             summary='Скачать загруженный файл.',
-#             description='Скачивание ранее загруженного файла. Возможность '
-#                         'скачивания есть как по переданному пути до файла, '
-#                         'так и по идентификатору.')
-# async def download_files(
-#         path: str,
-#         current_user: UserInDB = Depends(get_current_user),
-#         session: AsyncSession = Depends(get_session)
-# ) -> Any:
-#     file_path = await get_file_path(path, session)
-#     return file_path
 
 
 @router.get('/files/download',

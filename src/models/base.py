@@ -1,6 +1,7 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UUID
 from sqlalchemy.orm import relationship
 
+from src.api.v1.schemas import FileInfo
 from src.db.database import Base
 
 
@@ -26,3 +27,12 @@ class File(Base):
                      ForeignKey('users.id', ondelete='CASCADE'),
                      nullable=False)
     relationship(User, backref='files')
+
+    def as_dict(self) -> FileInfo:
+        return FileInfo(
+            id=self.id,
+            name=self.name,
+            created_at=self.created_at,
+            path=self.path,
+            size=self.size,
+        )

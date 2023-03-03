@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+COMPRESSION_TYPE = typing.Literal['tar', 'zip']
+
 
 class Ping(BaseModel):
     db: float | typing.Literal['N/A']

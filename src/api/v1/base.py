@@ -5,10 +5,11 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.schemas import FileInfo, Ping, UserFiles, UserInDB
+from src.api.v1.schemas import (COMPRESSION_TYPE, FileInfo, Ping, UserFiles,
+                                UserInDB)
 from src.db.database import get_session
-from src.services.files import (get_file_path, iter_file, ping_connections,
-                                retrieve_files, upload)
+from src.services.files import (get_archive, get_file_path, iter_file,
+                                ping_connections, retrieve_files, upload)
 from src.services.auth import get_current_user
 
 router = APIRouter()
@@ -66,8 +67,14 @@ async def upload_files(file: UploadFile,
                         'так и по идентификатору.')
 async def download_files(
         path: str,
+        compression: COMPRESSION_TYPE = None,
         current_user: UserInDB = Depends(get_current_user),
         session: AsyncSession = Depends(get_session)
 ) -> Any:
-    file_path = await get_file_path(path, current_user.uuid, session)
-    return StreamingResponse(iter_file(file_path))
+    if compression is None:
+        file_path = await get_file_path(path, current_user.uuid, session)
+        return StreamingResponse(iter_file(file_path))
+    archive, media_type = await get_archive(
+        path, compression, current_user.uuid, session
+    )
+    return StreamingResponse(iter([archive.getvalue()]), media_type=media_type)

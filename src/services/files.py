@@ -1,7 +1,10 @@
 import datetime
 import contextlib
 import os
+import tarfile
 import time
+import zipfile
+from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO, TextIO
 from uuid import UUID, uuid4
@@ -14,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import select
 
 from src.models.base import File
-from src.api.v1.schemas import FileInfo
+from src.api.v1.schemas import COMPRESSION_TYPE, FileInfo
 from src.core.config import DSN, STORAGE_ROOT_DIR
 
 FIRST_LEVEL_SLICE = slice(0, 2)
@@ -126,7 +129,7 @@ async def write_to_database(
 async def get_file_path(
         file_path_or_id: str, user_uuid: str, session: AsyncSession
 ) -> Path:
-    uuid_string = is_valid_uuid(file_path_or_id)
+    uuid_string = get_valid_uuid(file_path_or_id)
     if uuid_string is None:
         file_path = file_path_or_id
         statement = select(File).where(File.path == file_path)
@@ -142,7 +145,7 @@ async def get_file_path(
     return full_path
 
 
-def is_valid_uuid(string):
+def get_valid_uuid(string):
     try:
         return str(UUID(string, version=4))
     except ValueError:
@@ -152,3 +155,57 @@ def is_valid_uuid(string):
 def iter_file(file_path: Path) -> BinaryIO | TextIO:
     with open(file_path, mode='rb') as file_like:
         yield from file_like
+
+
+async def get_archive(path_or_id: str,
+                      compression_type: COMPRESSION_TYPE,
+                      user_uuid: str,
+                      session: AsyncSession) -> tuple[BytesIO, str]:
+    not_found_exception = HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                        detail='Путь не найден.')
+    uuid_string = get_valid_uuid(path_or_id)
+    if uuid_string is None:
+        path = path_or_id
+    else:
+        statement = select(File.path).where(File.id == uuid_string)
+        result = await session.execute(statement)
+        path = result.scalar()
+        if path is None:
+            raise not_found_exception
+    user_dir = get_user_dir(user_uuid)
+    full_path = Path(user_dir + path)
+    if not full_path.exists():
+        raise not_found_exception
+    if full_path.is_file():
+        paths = [full_path]
+    else:
+        paths = [path for path in full_path.iterdir() if path.is_file()]
+
+    if compression_type == 'tar':
+        return tar_files(paths, user_dir)
+    elif compression_type == 'zip':
+        return zip_files(paths, user_dir)
+
+
+def tar_files(paths: list[Path], user_dir: str) -> tuple[BytesIO, str]:
+    buffer = BytesIO()
+    with tarfile.open(fileobj=buffer, mode='w:gz') as file_obj:
+        for path in paths:
+            file_obj.add(
+                path,
+                arcname=str(path).replace(user_dir, '')
+            )
+    return buffer, 'application/x-gtar'
+
+
+def zip_files(paths: list[Path], user_dir: str) -> tuple[BytesIO, str]:
+    buffer = BytesIO()
+    with zipfile.ZipFile(
+            buffer, mode='w', compression=zipfile.ZIP_DEFLATED
+    ) as file_obj:
+        for path in paths:
+            file_obj.write(
+                path,
+                arcname=str(path).replace(user_dir, '')
+            )
+    return buffer, 'application/x-zip-compressed'

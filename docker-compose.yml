@@ -9,7 +9,7 @@ services:
       - .env
     networks:
       - storage_net
-#    restart: always
+    restart: always
 
   api:
     container_name: storage_api
@@ -22,13 +22,23 @@ services:
       - db
     env_file:
       - .env
-    entrypoint: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-#    entrypoint: alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000
-#    command: bash -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"
-
+    entrypoint: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
     networks:
       - storage_net
-#    restart: always
+    restart: always
+
+  nginx:
+    image: nginx:1.19.3
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+#      - ./configs:/etc/nginx/conf.d:ro
+    depends_on:
+      - api
+    networks:
+      - storage_net
+    restart: always
 
 networks:
   storage_net:

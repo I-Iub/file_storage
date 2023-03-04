@@ -2,7 +2,7 @@ import datetime
 import typing
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 COMPRESSION_TYPE = typing.Literal['tar', 'zip']
 
@@ -12,11 +12,11 @@ class Ping(BaseModel):
 
 
 class User(BaseModel):
-    username: str
+    username: str = Field(..., min_length=1)
 
 
 class UserAuth(User):
-    password: str
+    password: str = Field(..., min_length=1)
 
 
 class UserInDB(UserAuth):

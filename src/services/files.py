@@ -47,7 +47,7 @@ async def retrieve_files(
 ) -> dict[str, str | list[FileInfo]]:
     statement = select(File).where(File.user_id == user_uuid)
     result = await session.execute(statement)
-    files = [file.as_dict() for file, *_ in result.all()]
+    files = [file.as_dict() for file, in result.all()]
     return dict(account_id=user_uuid, files=files)
 
 

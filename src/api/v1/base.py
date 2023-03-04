@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.api.v1.schemas import (COMPRESSION_TYPE, FileInfo, Ping, UserFiles,
                                 UserInDB)
 from src.db.database import get_session
+from src.services.auth import get_current_user
 from src.services.files import (get_archive, get_file_path, iter_file,
                                 ping_connections, retrieve_files, upload)
-from src.services.auth import get_current_user
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')

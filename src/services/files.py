@@ -1,5 +1,5 @@
-import datetime
 import contextlib
+import datetime
 import os
 import tarfile
 import time
@@ -16,9 +16,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import select
 
-from src.models.base import File
 from src.api.v1.schemas import COMPRESSION_TYPE, FileInfo
 from src.core.config import DSN, STORAGE_ROOT_DIR
+from src.models.base import File
 
 FIRST_LEVEL_SLICE = slice(0, 2)
 SECOND_LEVEL_SLICE = slice(2, 4)

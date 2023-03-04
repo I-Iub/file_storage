@@ -3,7 +3,6 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from src.api.v1.schemas import User, UserAuth
 from src.db.database import get_session
 from src.services.register import create_user

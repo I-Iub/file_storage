@@ -3,6 +3,8 @@ services:
   db:
     container_name: storage_db
     image: postgres:14.5-alpine
+    ports:
+      - "35432:5432"
     env_file:
       - .env
     networks:

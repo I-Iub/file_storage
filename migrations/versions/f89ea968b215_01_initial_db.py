@@ -1,8 +1,8 @@
 """01_initial-db
 
-Revision ID: 718d8eeac724
+Revision ID: f89ea968b215
 Revises: 
-Create Date: 2023-03-02 17:25:57.963838
+Create Date: 2023-03-06 20:13:58.833078
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '718d8eeac724'
+revision = 'f89ea968b215'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,7 +24,7 @@ def upgrade() -> None:
     sa.Column('password', sa.String(length=256), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
+    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=True)
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('files',
     sa.Column('id', sa.UUID(), nullable=False),
@@ -36,8 +36,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_files_id'), 'files', ['id'], unique=False)
-    op.create_index(op.f('ix_files_path'), 'files', ['path'], unique=True)
+    op.create_index(op.f('ix_files_id'), 'files', ['id'], unique=True)
+    op.create_index(op.f('ix_files_path'), 'files', ['path'], unique=False)
     # ### end Alembic commands ###
 
 

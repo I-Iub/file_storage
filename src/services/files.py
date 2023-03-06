@@ -153,8 +153,11 @@ def get_valid_uuid(string):
 
 
 def iter_file(file_path: Path) -> BinaryIO | TextIO:
-    with open(file_path, mode='rb') as file_like:
-        yield from file_like
+    try:
+        with open(file_path, mode='rb') as file_like:
+            yield from file_like
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 async def get_archive(path_or_id: str,

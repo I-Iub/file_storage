@@ -8,7 +8,7 @@ from src.db.database import Base
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(UUID, primary_key=True, index=True)
+    id = Column(UUID, primary_key=True, unique=True, index=True)
     username = Column(
         String(length=256), nullable=False, unique=True, index=True
     )
@@ -18,10 +18,10 @@ class User(Base):
 class File(Base):
     __tablename__ = 'files'
 
-    id = Column(UUID, primary_key=True, index=True)
+    id = Column(UUID, primary_key=True, unique=True, index=True)
     name = Column(String(length=256), nullable=False)
     created_at = Column(DateTime, nullable=False)
-    path = Column(String(length=256), nullable=False, unique=True, index=True)
+    path = Column(String(length=256), nullable=False, index=True)
     size = Column(Integer, nullable=False)
     user_id = Column(UUID,
                      ForeignKey('users.id', ondelete='CASCADE'),

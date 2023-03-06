@@ -1,20 +1,26 @@
 import os
 
 from dotenv import load_dotenv
+from pydantic import BaseSettings, Field, PostgresDsn
 
 load_dotenv()
-
-PROJECT_NAME = os.getenv('PROJECT_NAME', 'File storage')
-PROJECT_HOST = os.getenv('PROJECT_HOST', '127.0.0.1')
-PROJECT_PORT = int(os.getenv('PROJECT_PORT', '8080'))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-DSN = os.getenv(
-    'DSN', 'postgresql+asyncpg://postgres:postgres@localhost:5432/storage'
-)
+class Settings(BaseSettings):
+    project_name: str = Field('File storage', env='PROJECT_NAME')
+    project_host: str = Field('127.0.0.1', env='PROJECT_HOST')
+    project_port: int = Field(8080, env='PROJECT_PORT')
+    dsn: PostgresDsn
+    secret_key: str
+    algorithm: str
+    access_token_expire_minutes: int = Field(30,
+                                             env='ACCESS_TOKEN_EXPIRE_MINUTES')
+    storage_root_dir: str
 
-SECRET_KEY = os.getenv('SECRET_KEY')
-ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 30))
+    class Config:
+        env_file = BASE_DIR + '.env'
+        env_file_encoding = 'utf-8'
 
-STORAGE_ROOT_DIR = str(os.getenv('STORAGE_ROOT_DIR'))
+
+settings = Settings()

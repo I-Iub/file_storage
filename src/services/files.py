@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import select
 
 from src.api.v1.schemas import COMPRESSION_TYPE, FileInfo
-from src.core.config import DSN, STORAGE_ROOT_DIR
+from src.core.config import settings
 from src.models.base import File
 
 FIRST_LEVEL_SLICE = slice(0, 2)
@@ -31,7 +31,7 @@ async def ping_connections() -> dict[str, float]:
 
 
 def ping_database() -> float | None:
-    sync_dsn = DSN.replace('asyncpg', 'psycopg2', 1)
+    sync_dsn = settings.dsn.replace('asyncpg', 'psycopg2', 1)
     sync_engine = create_engine(sync_dsn)
     try:
         start = time.monotonic()
@@ -100,7 +100,7 @@ def get_user_dir(user_uuid: str) -> str:
          user_uuid[SECOND_LEVEL_SLICE],
          user_uuid[THIRD_LEVEL_SLICE])
     )
-    return STORAGE_ROOT_DIR + user_base_dir
+    return settings.storage_root_dir + user_base_dir
 
 
 def check_path(path: Path) -> None:

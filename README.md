@@ -3,11 +3,11 @@
 ## Описание задания
 
 Реализовать **http-сервис**, который обрабатывает поступающие запросы. Сервер 
-стартует по адресу `http://127.0.0.1:8080` (дефолтное значение, можнть быть 
+стартует по адресу `http://127.0.0.1:8080` (дефолтное значение, может быть 
 изменено).
 
 <details>
-<summary> Список необходимых эндпойнтов </summary>
+<summary> Список необходимых эндпоинтов </summary>
 
 1. Статус активности связанных сервисов
 
@@ -21,9 +21,7 @@ GET /ping
 ```json
 {
     "db": 1.27,
-    "cache": 1.89,
     ...
-    "service-N": 0.56
 }
 ```
 
@@ -63,9 +61,8 @@ GET /files/
             "id": "a19ad56c-d8c6-4376-b9bb-ea82f7f5a853",
             "name": "notes.txt",
             "created_ad": "2020-09-11T17:22:05Z",
-            "path": "/homework/test-fodler/notes.txt",
-            "size": 8512,
-            "is_downloadable": true
+            "path": "/homework/test-folder/notes.txt",
+            "size": 8512
           },
         ...
           {
@@ -73,8 +70,7 @@ GET /files/
             "name": "tree-picture.png",
             "created_ad": "2019-06-19T13:05:21Z",
             "path": "/homework/work-folder/environment/tree-picture.png",
-            "size": 1945,
-            "is_downloadable": true
+            "size": 1945
           }
     ]
 }
@@ -106,9 +102,8 @@ POST /files/upload
     "id": "a19ad56c-d8c6-4376-b9bb-ea82f7f5a853",
     "name": "notes.txt",
     "created_ad": "2020-09-11T17:22:05Z",
-    "path": "/homework/test-fodler/notes.txt",
-    "size": 8512,
-    "is_downloadable": true
+    "path": "/homework/test-folder/notes.txt",
+    "size": 8512
 }
 ```
 
@@ -128,14 +123,9 @@ GET /files/download
 Возможность скачивания есть как по переданному пути до файла, так и по 
 идентификатору.
 
-</details>
 
+7. Добавление возможности скачивания в архиве
 
-## Дополнительные требования (отметьте [X] выбранные пункты):
-
-- [X] (2 балла) Добавление возможности скачивания в архиве
-
-<details>
 <summary> Описание изменений </summary>
 
 ```
@@ -150,15 +140,15 @@ Path-параметр расширяется дополнительным пар
 
 **Path parameters**
 ```
-/?path=[<path-to-file>||<file-meta-id>||<path-to-folder>||<folder-meta-id>] & 
-compression"=[zip||tar||7z]
+/?path=[<path-to-file>||<file-meta-id>||<path-to-folder>] & 
+compression"=[zip||tar]
 ```
 </details>
 
 
 ## Запуск проекта
 
-Клонируйте проект 
+Клонируйте проект
 ```
 git clone https://github.com/I-Iub/async-python-sprint-5.git
 ```
@@ -169,7 +159,8 @@ git clone https://github.com/I-Iub/async-python-sprint-5.git
 python3 -m venv venv
 . venv/bin/activate
 ```
-Установите зависимости
+Установите зависимости. Можно пропустить, если не планируется запуск приложения 
+вне docker-контейнера. Зависимости также нужны для запуска тестов.
 ```
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -190,7 +181,7 @@ docker compose exec api alembic upgrade head
 ```
 Проверьте, что сервис работает. Например, выполните:
 ```
-curl 127.0.0.1:8080/api/v1/ping
+curl 127.0.0.1:80/api/v1/ping
 ```
 Ответ должен быть примерно такой: `{"db":0.013777}`.
 
@@ -213,7 +204,9 @@ docker run \
 Укажите в файле `pytest.ini` переменную `STORAGE_ROOT_DIR` -- путь до 
 тестового файлового хранилища.
 
-Запустите тесты:
+Проверьте, что установлены зависимости (`pip install -r requirements.txt`).
+
+Проверьте, что находитесь в корневой директории проекта, запустите тесты:
 ```
 PYTHONPATH=. pytest src/tests/* -v
 ```
